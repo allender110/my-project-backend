@@ -10,8 +10,8 @@ app = Flask(__name__, static_url_path='/static')
 CORS(app)
 
 # 硬编码的 Excel 和模型图像路径
-excel_path = "../Data/copyData1.xlsx"  # 固定的 Excel 文件路径
-modelPath = "../Data/model"  # 固定的模型图像路径
+excel_path = "./copyData1.xlsx"  # 固定的 Excel 文件路径
+modelPath = "./model"  # 固定的模型图像路径
 
 # 读取 Excel 数据（只需要加载一次）
 df = pd.read_excel(excel_path, sheet_name="Sheet")

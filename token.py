@@ -1,27 +1,26 @@
 import os
 import json
 from datetime import datetime
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import pandas as pd
 import openpyxl
-from flask_cors import CORS
 
 app = Flask(__name__, static_url_path='/static')
-CORS(app)
-
-# 硬编码的 Excel 和模型图像路径
-excel_path = "./copyData1.xlsx"  # 固定的 Excel 文件路径
-modelPath = "./model"  # 固定的模型图像路径
-
-# 读取 Excel 数据（只需要加载一次）
-df = pd.read_excel(excel_path, sheet_name="Sheet")
 
 # 保存上传的图片的目录
 upload_folder = './images'
 os.makedirs(upload_folder, exist_ok=True)
 
+# 硬编码的 Excel 和模型图像路径
+excel_path = "data.xlsx"  # 固定的 Excel 文件路径
+
+# 读取 Excel 数据
+df = pd.DataFrame()  # 初始化为空DataFrame
+
+
 # 初始化或读取Excel表
 def save_scores_to_excel(filename, image_name, scores):
+    # 如果文件不存在，则创建一个新的工作簿
     if not os.path.exists(filename):
         workbook = openpyxl.Workbook()
         sheet = workbook.active
@@ -48,6 +47,7 @@ def save_scores_to_excel(filename, image_name, scores):
 
     workbook.save(filename)
 
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -59,24 +59,23 @@ def predict():
         img_copy_path = os.path.join(upload_folder, filename)
         test_image.save(img_copy_path)
 
-        # 根据测试图像文件名查找 Excel 中的分数
-        row_index = df[df['Copy'].str.contains(test_image.filename, na=False)].index.min()
-        # 从Excel中提取对应模型的score
-        scores = {
-            '美观': df.loc[row_index, 'Z-Score'],
-            '情绪': df.loc[row_index, 'Z-EI'],
-            '自控': df.loc[row_index, 'Z-EI.Self-Control'],
-            '情感': df.loc[row_index, 'Z-EI.Emotionality'],
-            '社交': df.loc[row_index, 'Z-EI.Sociability'],
-            'EI': df.loc[row_index, 'Z-EI']
+        # 模拟预测过程
+        results = {
+            '美观': 0.85,
+            '情绪': 0.72,
+            '自控': 0.65,
+            '情感': 0.91,
+            '社交': 0.82,
+            'EI': 0.88
         }
 
         # 在这之后添加数据到Excel中
-        save_scores_to_excel('data.xlsx', filename, scores)
-        return jsonify(scores)
+        save_scores_to_excel('data.xlsx', filename, results)
+        return jsonify(results)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/history', methods=['GET'])
 def get_history():
@@ -91,9 +90,12 @@ def get_history():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+# 用于展示图片的API
 @app.route('/images/<path:filename>')
 def serve_image(filename):
     return send_from_directory(upload_folder, filename)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

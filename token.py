@@ -1,7 +1,6 @@
 import os
 import json
 from datetime import datetime
-import pandas as pd
 from flask import Flask, request, jsonify
 import openpyxl
 from flask_cors import CORS
